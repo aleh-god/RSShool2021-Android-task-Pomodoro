@@ -1,10 +1,10 @@
-package by.godevelopment.multiplerowtypesrecyclerview
+package by.godevelopment.rsshool2021_android_task_pomodoro
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
-import by.godevelopment.multiplerowtypesrecyclerview.databinding.StopwatchItemBinding
+import by.godevelopment.rsshool2021_android_task_pomodoro.databinding.StopwatchItemBinding
 
 class StopwatchAdapter(
     private val listener: StopwatchListener

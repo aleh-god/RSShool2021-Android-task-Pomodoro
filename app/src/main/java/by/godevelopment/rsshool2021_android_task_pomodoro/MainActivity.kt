@@ -1,9 +1,9 @@
-package by.godevelopment.multiplerowtypesrecyclerview
+package by.godevelopment.rsshool2021_android_task_pomodoro
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
-import by.godevelopment.multiplerowtypesrecyclerview.databinding.ActivityMainBinding
+import by.godevelopment.rsshool2021_android_task_pomodoro.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), StopwatchListener {
 

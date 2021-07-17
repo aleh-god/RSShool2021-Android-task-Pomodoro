@@ -1,11 +1,11 @@
-package by.godevelopment.multiplerowtypesrecyclerview
+package by.godevelopment.rsshool2021_android_task_pomodoro
 
 import android.content.res.Resources
 import android.graphics.drawable.AnimationDrawable
 import android.os.CountDownTimer
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.RecyclerView
-import by.godevelopment.multiplerowtypesrecyclerview.databinding.StopwatchItemBinding
+import by.godevelopment.rsshool2021_android_task_pomodoro.databinding.StopwatchItemBinding
 
 // передаем во ViewHolder сгенерированный класс байдинга для разметки элемента RecyclerView.
 // Вместо кучи полей для каждого элемента, теперь мы храним один объект со всеми ссылками на элементы-view
