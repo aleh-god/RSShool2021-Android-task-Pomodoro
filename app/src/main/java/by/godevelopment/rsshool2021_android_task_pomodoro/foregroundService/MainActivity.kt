@@ -1,5 +1,6 @@
-package by.godevelopment.foregroundservice
+package by.godevelopment.rsshool2021_android_task_pomodoro
 
+/*
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
@@ -56,3 +57,5 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
         private const val INTERVAL = 10L
     }
 }
+
+ */

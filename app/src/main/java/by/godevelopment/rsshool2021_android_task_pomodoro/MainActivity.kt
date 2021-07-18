@@ -2,12 +2,17 @@ package by.godevelopment.rsshool2021_android_task_pomodoro
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.EditText
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.godevelopment.rsshool2021_android_task_pomodoro.databinding.ActivityMainBinding
+import com.google.android.material.textfield.TextInputEditText
+import java.time.Duration
 
 class MainActivity : AppCompatActivity(), StopwatchListener {
 
     private lateinit var binding: ActivityMainBinding
+
 
     private val stopwatchAdapter = StopwatchAdapter(this) // Передаем сами себя в val listener: StopwatchListener
     private val stopwatches = mutableListOf<Stopwatch>()
@@ -25,16 +30,24 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
         }
 
         binding.addNewStopwatchButton.setOnClickListener {
-            stopwatches.add(Stopwatch(nextId++, 0, false))
-            // Хотя использование LiveData <List> - это простой способ предоставить данные адаптеру, это не обязательно - вы можете использовать submitList (List), когда доступны новые списки.
-            // Submits a new list to be diffed, and displayed.
-            stopwatchAdapter.submitList(stopwatches.toList())
+            val textInput = binding.textInput.text.toString().toIntOrNull()
+            if (textInput != null && textInput > 0 && textInput < 1441) {
+                val milliSecLong = (textInput * 60000).toLong()
+
+                stopwatches.add(Stopwatch(nextId++, milliSecLong, false))
+                // Хотя использование LiveData <List> - это простой способ предоставить данные адаптеру, это не обязательно - вы можете использовать submitList (List), когда доступны новые списки.
+                // Submits a new list to be diffed, and displayed.
+                stopwatchAdapter.submitList(stopwatches.toList())
+            } else {
+                Toast.makeText(this, "введите значение от 1 до 1440", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     // Создаём соответствующий интерфейс, имплементируем который в MainActivity (поскольку именно в этом классе у нас логика управления списком таймеров), и передадим эту имплементацию в качестве параметра в адаптер RecyclerView:
     override fun start(id: Int) {
         changeStopwatch(id, null, true)
+        // Остановить другой таймер
     }
 
     override fun stop(id: Int, currentMs: Long) {
@@ -42,7 +55,14 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
     }
 
     override fun reset(id: Int) {
-        changeStopwatch(id, 0L, false)
+        val textInput = binding.textInput.text.toString().toIntOrNull()
+        if (textInput != null && textInput > 0 && textInput < 1441) {
+            val milliSecLong = (textInput * 60000).toLong()
+            changeStopwatch(id, milliSecLong, false)
+
+        } else {
+            Toast.makeText(this, "введите значение от 1 до 1440", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun delete(id: Int) {

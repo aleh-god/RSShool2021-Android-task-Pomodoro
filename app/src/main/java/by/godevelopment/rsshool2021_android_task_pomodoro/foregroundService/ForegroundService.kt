@@ -1,4 +1,4 @@
-package by.godevelopment.foregroundservice
+package by.godevelopment.rsshool2021_android_task_pomodoro
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
