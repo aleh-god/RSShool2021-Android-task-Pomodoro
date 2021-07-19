@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
             if (textInput != null && textInput > 0 && textInput < 1441) {
                 val milliSecLong = (textInput * 60000).toLong()
 
-                stopwatches.add(Stopwatch(nextId++, milliSecLong, false))
+                stopwatches.add(Stopwatch(nextId++, milliSecLong, milliSecLong,false))
                 // Хотя использование LiveData <List> - это простой способ предоставить данные адаптеру, это не обязательно - вы можете использовать submitList (List), когда доступны новые списки.
                 // Submits a new list to be diffed, and displayed.
                 stopwatchAdapter.submitList(stopwatches.toList())
@@ -46,8 +46,22 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
 
     // Создаём соответствующий интерфейс, имплементируем который в MainActivity (поскольку именно в этом классе у нас логика управления списком таймеров), и передадим эту имплементацию в качестве параметра в адаптер RecyclerView:
     override fun start(id: Int) {
-        changeStopwatch(id, null, true)
-        // Остановить другой таймер
+        // changeStopwatch(id, null, true)
+
+        val newTimers = mutableListOf<Stopwatch>()
+
+        stopwatches.forEach {
+            if (it.id == id) {
+                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, true))
+            } else {
+                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, false))
+                // newTimers.add(it)
+            }
+        }
+        stopwatchAdapter.submitList(newTimers)
+        stopwatches.clear()
+        stopwatches.addAll(newTimers)
+
     }
 
     override fun stop(id: Int, currentMs: Long) {
@@ -55,14 +69,22 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
     }
 
     override fun reset(id: Int) {
-        val textInput = binding.textInput.text.toString().toIntOrNull()
-        if (textInput != null && textInput > 0 && textInput < 1441) {
-            val milliSecLong = (textInput * 60000).toLong()
-            changeStopwatch(id, milliSecLong, false)
+        // changeStopwatch(id, null, false)
+        
+        val newTimers = mutableListOf<Stopwatch>()
 
-        } else {
-            Toast.makeText(this, "введите значение от 1 до 1440", Toast.LENGTH_SHORT).show()
+        stopwatches.forEach {
+            if (it.id == id) {
+                newTimers.add(Stopwatch(it.id, it.taskMs, it.taskMs, it.isStarted))
+            } else {
+                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, it.isStarted))
+                // newTimers.add(it)
+            }
         }
+        stopwatchAdapter.submitList(newTimers)
+        stopwatches.clear()
+        stopwatches.addAll(newTimers)
+
     }
 
     override fun delete(id: Int) {
@@ -76,7 +98,8 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
         // Остальные переписываем
         stopwatches.forEach {
             if (it.id == id) {
-                newTimers.add(Stopwatch(it.id, currentMs ?: it.currentMs, isStarted))
+                // Если null, то запускаем с последнего значенияч
+                newTimers.add(Stopwatch(it.id, currentMs ?: it.currentMs, it.taskMs, isStarted))
             } else {
                 newTimers.add(it)
             }

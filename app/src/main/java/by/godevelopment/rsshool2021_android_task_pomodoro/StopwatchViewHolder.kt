@@ -3,6 +3,7 @@ package by.godevelopment.rsshool2021_android_task_pomodoro
 import android.content.res.Resources
 import android.graphics.drawable.AnimationDrawable
 import android.os.CountDownTimer
+import android.widget.Toast
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.RecyclerView
 import by.godevelopment.rsshool2021_android_task_pomodoro.databinding.StopwatchItemBinding
@@ -75,7 +76,6 @@ class StopwatchViewHolder(
 
         timer?.cancel()
 
-        // Заменить анимацию на circle.isInvisible = true
         binding.blinkingIndicator.isInvisible = true
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
     }
@@ -91,13 +91,21 @@ class StopwatchViewHolder(
                 // С тактом меняем числа на циферблате, интервалы просчитваем вручную
                 stopwatch.currentMs -= interval
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+
+                val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
+
+                binding.customViewOne.setCurrent(circleProcent)
+
             }
 
             // Срабатывает калл-бэк, когда время на таймере закончится
             override fun onFinish() {
                 stopwatch.currentMs = 0
+                binding.customViewOne.setCurrent(60000)
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
                 stopTimer(stopwatch)
+                Toast.makeText(itemView.context, "Работа таймера завершена!", Toast.LENGTH_LONG).show()
+                listener.stop(stopwatch.id, stopwatch.taskMs)
             }
         }
     }
@@ -128,6 +136,10 @@ class StopwatchViewHolder(
         private const val START_TIME = "00:00:00"   // :00
         private const val UNIT_TEN_MS = 1000L
         private const val PERIOD  = 1000L * 60L * 60L * 24L // Day
+
+        private const val INTERVAL_CIRCLE = 100L
+        private const val PERIOD_CIRCLE = 1000L * 30 // 30 sec
+        private const val REPEAT_CIRCLE = 10 // 10 times
     }
 
 }

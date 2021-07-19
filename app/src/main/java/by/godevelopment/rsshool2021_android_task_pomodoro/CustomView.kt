@@ -14,7 +14,7 @@ class CustomView @JvmOverloads constructor(
     @AttrRes defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private var periodMs = 0L
+    private var periodMs = 1000L * 60// 0L
     private var currentMs = 0L
     private var color = 0
     private var style = FILL
