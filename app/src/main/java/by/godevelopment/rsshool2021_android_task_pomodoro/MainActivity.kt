@@ -1,17 +1,23 @@
 package by.godevelopment.rsshool2021_android_task_pomodoro
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.EditText
+import android.os.SystemClock
 import android.widget.Toast
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.godevelopment.rsshool2021_android_task_pomodoro.databinding.ActivityMainBinding
-import com.google.android.material.textfield.TextInputEditText
-import java.time.Duration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity(), StopwatchListener {
+class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
 
     private lateinit var binding: ActivityMainBinding
+
+    // Убрать и заменить секундами из таймера
+    private var startTime = 60000L
 
 
     private val stopwatchAdapter = StopwatchAdapter(this) // Передаем сами себя в val listener: StopwatchListener
@@ -23,6 +29,18 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // В onCreate() добавляем обсервер ProcessLifecycleOwner.get().lifecycle.addObserver(this), передаем туда this - теперь измененения жизненного цикла будут передаваться в активити, т.е. будут вызываться методы, которые мы пометили соответствующими аннотациями.
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+
+        // Это нужно было для приложения, секундомер запускался от старта прилаги
+//        startTime = SystemClock.uptimeMillis()      // Вы должны использовать SystemClock.uptimeMillis()
+//        lifecycleScope.launch(Dispatchers.Main) {
+//            while (true) {
+//                // Здесь забивалось основная вьюха задания binding.timerView.text = (SystemClock.uptimeMillis() - startTime).displayTime()
+//                delay(INTERVAL)
+//            }
+//        }
 
         binding.recycler.apply {
             layoutManager = LinearLayoutManager(context)
@@ -107,5 +125,26 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
         stopwatchAdapter.submitList(newTimers)
         stopwatches.clear()
         stopwatches.addAll(newTimers)
+    }
+
+    // Методы будут вызываться когда соответствующие состояния жизненного цикла будут достигнуты
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onAppBackgrounded() {
+        val startIntent = Intent(this, ForegroundService::class.java)
+        startIntent.putExtra(COMMAND_ID, COMMAND_START)
+        startIntent.putExtra(STARTED_TIMER_TIME_MS, startTime) // вставить секунды из таймера
+        startService(startIntent)
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onAppForegrounded() {
+        val stopIntent = Intent(this, ForegroundService::class.java)
+        stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
+        startService(stopIntent)
+    }
+
+    private companion object {
+
+        private const val INTERVAL = 10L
     }
 }

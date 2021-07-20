@@ -8,7 +8,7 @@ const val COMMAND_ID = "COMMAND_ID"
 const val STARTED_TIMER_TIME_MS = "STARTED_TIMER_TIME"
 
 
-fun Long.displayTime(): String {
+fun Long.displayTimeX(): String {
     if (this <= 0L) {
         return START_TIME
     }

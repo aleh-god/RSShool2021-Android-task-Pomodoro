@@ -64,7 +64,6 @@ class StopwatchViewHolder(
         timer = getCountDownTimer(stopwatch)
         timer?.start()
 
-        // Заменить анимацию на circle.isInvisible = true
         binding.blinkingIndicator.isInvisible = false
         (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
     }
@@ -92,8 +91,8 @@ class StopwatchViewHolder(
                 stopwatch.currentMs -= interval
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
 
+                // Перенести в байнд вью
                 val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
-
                 binding.customViewOne.setCurrent(circleProcent)
 
             }

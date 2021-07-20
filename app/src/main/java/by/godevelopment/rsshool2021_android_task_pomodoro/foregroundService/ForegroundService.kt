@@ -29,8 +29,8 @@ class ForegroundService : Service() {
     // Теперь при каждом повторном обращении к билдеру он вернет нам готовую реализацию.
     private val builder by lazy {
         NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Название заголовка")
-            .setGroup("Название группы уведомлений")
+            .setContentTitle("Таймер в работе")
+            .setGroup("PomodoroTimer")
             .setGroupSummary(false)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -89,11 +89,12 @@ class ForegroundService : Service() {
     // В корутине каждую секунду обновляем нотификацию. И как уже было сказано, обновлять чаще будет проблематично.
     private fun continueTimer(startTime: Long) {
         job = GlobalScope.launch(Dispatchers.Main) {
+            val metkaTime = SystemClock.uptimeMillis() // Будем отсчитывать от этой метки
             while (true) {
                 notificationManager?.notify(
                     NOTIFICATION_ID,
                     getNotification(
-                        (SystemClock.uptimeMillis() - startTime).displayTime().dropLast(3)
+                        (startTime - (SystemClock.uptimeMillis() - metkaTime)).displayTimeX().dropLast(3)
                     )
                 )
                 delay(INTERVAL)
@@ -160,14 +161,14 @@ class ForegroundService : Service() {
 
     private fun getPendingIntent(): PendingIntent? {
         val resultIntent = Intent(this, MainActivity::class.java)
-        resultIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        resultIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         return PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_ONE_SHOT)
     }
 
     private companion object {
 
         private const val CHANNEL_ID = "Channel_ID"
-        private const val NOTIFICATION_ID = 777
+        private const val NOTIFICATION_ID = 666
         private const val INTERVAL = 1000L
     }
 }
