@@ -1,4 +1,4 @@
-package by.godevelopment.rsshool2021_android_task_pomodoro
+package by.godevelopment.rsshool2021_android_task_pomodoro.foregroundService
 
 const val START_TIME = "00:00:00:00"
 const val INVALID = "INVALID"

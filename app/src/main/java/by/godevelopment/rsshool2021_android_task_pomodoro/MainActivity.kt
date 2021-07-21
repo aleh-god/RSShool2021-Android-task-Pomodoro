@@ -3,22 +3,21 @@ package by.godevelopment.rsshool2021_android_task_pomodoro
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.widget.Toast
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.godevelopment.rsshool2021_android_task_pomodoro.databinding.ActivityMainBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import by.godevelopment.rsshool2021_android_task_pomodoro.foregroundService.COMMAND_ID
+import by.godevelopment.rsshool2021_android_task_pomodoro.foregroundService.COMMAND_START
+import by.godevelopment.rsshool2021_android_task_pomodoro.foregroundService.COMMAND_STOP
+import by.godevelopment.rsshool2021_android_task_pomodoro.foregroundService.STARTED_TIMER_TIME_MS
 
 class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
 
     private lateinit var binding: ActivityMainBinding
 
-    // Убрать и заменить секундами из таймера
-    private var startTime = 60000L
-
+    // Глобальное время из тика таймера из холдера активной вьюхи
+    override var globalTime = 0L
 
     private val stopwatchAdapter = StopwatchAdapter(this) // Передаем сами себя в val listener: StopwatchListener
     private val stopwatches = mutableListOf<Stopwatch>()
@@ -130,6 +129,9 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
     // Методы будут вызываться когда соответствующие состояния жизненного цикла будут достигнуты
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
+        val activeWatches = stopwatches.find { it.isStarted == true }
+        val startTime = activeWatches?.currentMs ?: 0L
+
         val startIntent = Intent(this, ForegroundService::class.java)
         startIntent.putExtra(COMMAND_ID, COMMAND_START)
         startIntent.putExtra(STARTED_TIMER_TIME_MS, startTime) // вставить секунды из таймера

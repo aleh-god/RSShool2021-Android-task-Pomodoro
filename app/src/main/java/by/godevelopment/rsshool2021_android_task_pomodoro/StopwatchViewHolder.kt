@@ -1,8 +1,12 @@
 package by.godevelopment.rsshool2021_android_task_pomodoro
 
+import android.content.ContentValues.TAG
 import android.content.res.Resources
 import android.graphics.drawable.AnimationDrawable
+import android.nfc.Tag
 import android.os.CountDownTimer
+import android.os.SystemClock
+import android.util.Log
 import android.widget.Toast
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.RecyclerView
@@ -26,12 +30,16 @@ class StopwatchViewHolder(
     fun bind(stopwatch: Stopwatch) {
         // Текстовое поле для отображения 00:00:00:00 stopwatch_item
         binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+        val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
+        binding.customViewOne.setCurrent(circleProcent)
 
         // Если таймер работает,
         if (stopwatch.isStarted) {
             startTimer(stopwatch)   // то рисуем иконки стоп и включаем кастом вью
+            Log.i("isStarted?", "startTimer(stopwatch)")
         } else {
             stopTimer(stopwatch)    // иначе, рисуем икноки старт и выключаем кастом вью
+            Log.i("isStarted?", "stopTimer(stopwatch)")
         }
 
         initButtonsListeners(stopwatch) // Настраиваем действия на кнопку-оборотень
@@ -43,8 +51,11 @@ class StopwatchViewHolder(
             // Если таймер работает,
             if (stopwatch.isStarted) {
                 listener.stop(stopwatch.id, stopwatch.currentMs) // То на нажатие останавливаем и сохраняем время
+                Log.i("isStarted?", "кнопку-оборотень listener.stop")
+
             } else {
                 listener.start(stopwatch.id)    // Иначе, на нажатие запускаем таймер
+                Log.i("isStarted?", "кнопку-оборотень listener.start")
             }
         }
 
@@ -61,6 +72,13 @@ class StopwatchViewHolder(
         // в методе startTimer обязательно нужно кэнсельнуть таймер перед созданием нового
         // Это необзодимо по той причине, что RecyclerView переиспользует ViewHolder’ы и один таймер может наложится на другой.
         timer?.cancel()
+        // Здесь нужна поправка на время проведенное за горизонтом событий, если таймер был запущен
+        val defTime = SystemClock.uptimeMillis() - listener.globalTime
+        Log.i("Timer", "defTime = SystemClock.uptimeMillis() - listener.globalTime: $defTime = ${SystemClock.uptimeMillis()} - ${listener.globalTime}")
+        val x = stopwatch.currentMs - defTime
+        Log.i("Timer", "x = stopwatch.currentMs - defTime: ${x.displayTime()} = ${stopwatch.currentMs.displayTime()} - ${defTime.displayTime()}")
+        if (x < 0) stopTimer(stopwatch)
+        else stopwatch.currentMs = stopwatch.currentMs - x
         timer = getCountDownTimer(stopwatch)
         timer?.start()
 
@@ -74,6 +92,10 @@ class StopwatchViewHolder(
         binding.startPauseButton.setImageDrawable(drawable)
 
         timer?.cancel()
+        Log.i("Timer", "timer?.cancel() и listener.globalTime = 0")
+        // С каждым тиком записываем системное время в мэйн
+        listener.globalTime = 0
+
 
         binding.blinkingIndicator.isInvisible = true
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
@@ -91,18 +113,24 @@ class StopwatchViewHolder(
                 stopwatch.currentMs -= interval
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
 
-                // Перенести в байнд вью
+                // Продублировать в bind view
                 val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
                 binding.customViewOne.setCurrent(circleProcent)
+
+                // С каждым тиком записываем системное время в мэйн
+                listener.globalTime = SystemClock.uptimeMillis()
+                Log.i("Timer", "С каждым тиком записываем системное время в мэйн ${listener.globalTime.displayTime()}")
 
             }
 
             // Срабатывает калл-бэк, когда время на таймере закончится
             override fun onFinish() {
                 stopwatch.currentMs = 0
-                binding.customViewOne.setCurrent(60000)
+                binding.customViewOne.setCurrent(1000)
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+                Log.i("Timer", "text = stopwatch.currentMs.displayTime() ${stopwatch.currentMs.displayTime()}")
                 stopTimer(stopwatch)
+                Log.i("Timer", "stopTimer(stopwatch)")
                 Toast.makeText(itemView.context, "Работа таймера завершена!", Toast.LENGTH_LONG).show()
                 listener.stop(stopwatch.id, stopwatch.taskMs)
             }
