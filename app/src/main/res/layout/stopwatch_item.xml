@@ -10,8 +10,10 @@
     android:layout_marginBottom="8dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/item"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        >
 
         <ImageView
             android:id="@+id/blinking_indicator"
@@ -20,8 +22,8 @@
             android:layout_margin="5dp"
             android:background="@drawable/blinking_circle"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/stopwatch_timer"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -29,27 +31,26 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
+            android:singleLine="true"
             android:text="00:00:00"
+            android:textColor="@color/purple_500"
             android:textSize="24sp"
-            android:singleLine = "true"
-            android:textColor = "@color/purple_500"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/blinking_indicator"
             app:layout_constraintEnd_toStartOf="@id/custom_view_one"
+            app:layout_constraintStart_toEndOf="@id/blinking_indicator"
             app:layout_constraintTop_toTopOf="parent" />
 
         <by.godevelopment.rsshool2021_android_task_pomodoro.CustomView
             android:id="@+id/custom_view_one"
             android:layout_width="20dp"
             android:layout_height="20dp"
+            android:layout_margin="5dp"
             app:custom_color="@color/purple_500"
             app:custom_style="fill"
-            android:layout_margin="5dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/start_pause_button"
             app:layout_constraintStart_toEndOf="@id/stopwatch_timer"
-            app:layout_constraintTop_toTopOf="parent"
-             />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/start_pause_button"
@@ -58,10 +59,10 @@
             android:layout_margin="10dp"
             android:background="@color/cardview_light_background"
             android:padding="5dp"
-            tools:text="Start"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/restart_button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Start" />
 
         <Button
             android:id="@+id/restart_button"
@@ -70,10 +71,10 @@
             android:layout_margin="10dp"
             android:background="@color/cardview_light_background"
             android:padding="5dp"
-            tools:text="Restart"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/delete_button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Restart" />
 
         <ImageButton
             android:id="@+id/delete_button"

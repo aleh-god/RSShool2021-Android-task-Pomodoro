@@ -64,7 +64,8 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
                 newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, true, SystemClock.uptimeMillis()))
 
             } else {
-                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, false, 0L)) // Возможно здесь занулять не надо
+                // Возможно здесь занулять не надо или проводить коррекцию
+                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, false, 0L))
             }
         }
 

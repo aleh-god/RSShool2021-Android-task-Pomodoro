@@ -7,6 +7,7 @@ import android.nfc.Tag
 import android.os.CountDownTimer
 import android.os.SystemClock
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +28,7 @@ class StopwatchViewHolder(
     // а все колбэки обрабатываются снаружи (в нашем случае через listener) - является предпочтительным.
     // в метод bind передаем экземпляр Stopwatch, он приходит к нам из метода onBindViewHolder адаптера и содержит актуальные параметры для данного элемента списка.
     fun bind(stopwatch: Stopwatch) {
+        val currentTime = SystemClock.uptimeMillis()
 
         // Элементы нашей item
         binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
@@ -39,6 +41,10 @@ class StopwatchViewHolder(
         if (stopwatch.isStarted) {
 
             // if () {}
+                //         android:background="#E91E63">
+
+
+
             startTimer(stopwatch)   // то рисуем иконки стоп и включаем кастом вью
             Log.i("isStarted?", "startTimer(stopwatch)")
         } else {
@@ -93,15 +99,24 @@ class StopwatchViewHolder(
         if (stopwatch.currentMs == stopwatch.taskMs) binding.startPauseButton.text = "Start"
         else binding.startPauseButton.text = "Resume"
 
+
+        if (stopwatch.currentMs == 0L) {
+            binding.startPauseButton.visibility = View.GONE
+            binding.item.setBackgroundColor(resources.getColor(R.color.finish, null))
+        }
+        else {
+            binding.startPauseButton.visibility = View.VISIBLE
+            binding.item.setBackgroundColor(resources.getColor(R.color.white, null))
+        }
+
         timer?.cancel()
     }
 
     private fun getCountDownTimer(stopwatch: Stopwatch): CountDownTimer {
         return object : CountDownTimer(stopwatch.currentMs, UNIT_TEN_MS) {
-            val interval = UNIT_TEN_MS
 
             override fun onTick(millisUntilFinished: Long) {
-                stopwatch.currentMs -= interval
+                stopwatch.currentMs = millisUntilFinished
 
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
                 // Коректируем изображение Кастом-Вью
@@ -110,6 +125,8 @@ class StopwatchViewHolder(
             }
 
             override fun onFinish() {
+                stopwatch.currentMs = 0L
+                listener.stop(stopwatch.id, stopwatch.currentMs)
                 stopTimer(stopwatch)
             }
         }
