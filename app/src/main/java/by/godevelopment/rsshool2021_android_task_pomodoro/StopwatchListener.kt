@@ -1,8 +1,8 @@
 package by.godevelopment.rsshool2021_android_task_pomodoro
 
+// Создаём соответствующий интерфейс, имплементируем который в MainActivity (поскольку именно в этом классе у нас логика управления списком таймеров),
+// и передадим эту имплементацию в качестве параметра в адаптер RecyclerView:
 interface StopwatchListener {
-
-    var globalTime: Long
 
     fun start(id: Int)
 

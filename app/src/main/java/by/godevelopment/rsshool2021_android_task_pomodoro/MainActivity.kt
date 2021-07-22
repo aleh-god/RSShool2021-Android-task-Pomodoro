@@ -3,6 +3,8 @@ package by.godevelopment.rsshool2021_android_task_pomodoro
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,12 +18,10 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
 
     private lateinit var binding: ActivityMainBinding
 
-    // Глобальное время из тика таймера из холдера активной вьюхи
-    override var globalTime = 0L
-
     private val stopwatchAdapter = StopwatchAdapter(this) // Передаем сами себя в val listener: StopwatchListener
     private val stopwatches = mutableListOf<Stopwatch>()
     private var nextId = 0
+    // private var timer: CountDownTimer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,15 +31,6 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
 
         // В onCreate() добавляем обсервер ProcessLifecycleOwner.get().lifecycle.addObserver(this), передаем туда this - теперь измененения жизненного цикла будут передаваться в активити, т.е. будут вызываться методы, которые мы пометили соответствующими аннотациями.
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-
-        // Это нужно было для приложения, секундомер запускался от старта прилаги
-//        startTime = SystemClock.uptimeMillis()      // Вы должны использовать SystemClock.uptimeMillis()
-//        lifecycleScope.launch(Dispatchers.Main) {
-//            while (true) {
-//                // Здесь забивалось основная вьюха задания binding.timerView.text = (SystemClock.uptimeMillis() - startTime).displayTime()
-//                delay(INTERVAL)
-//            }
-//        }
 
         binding.recycler.apply {
             layoutManager = LinearLayoutManager(context)
@@ -51,7 +42,7 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
             if (textInput != null && textInput > 0 && textInput < 1441) {
                 val milliSecLong = (textInput * 60000).toLong()
 
-                stopwatches.add(Stopwatch(nextId++, milliSecLong, milliSecLong,false))
+                stopwatches.add(Stopwatch(nextId++, milliSecLong, milliSecLong,false,0L))
                 // Хотя использование LiveData <List> - это простой способ предоставить данные адаптеру, это не обязательно - вы можете использовать submitList (List), когда доступны новые списки.
                 // Submits a new list to be diffed, and displayed.
                 stopwatchAdapter.submitList(stopwatches.toList())
@@ -61,41 +52,52 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
         }
     }
 
-    // Создаём соответствующий интерфейс, имплементируем который в MainActivity (поскольку именно в этом классе у нас логика управления списком таймеров), и передадим эту имплементацию в качестве параметра в адаптер RecyclerView:
-    override fun start(id: Int) {
-        // changeStopwatch(id, null, true)
+    // Реализация интерфейса
 
+    // Запускаем таймер, остальные останавливаем и добавляем глобальное время для коррекции
+    override fun start(id: Int) {
+        val newTimers = mutableListOf<Stopwatch>()
+
+        stopwatches.forEach {
+            // Не изменяем текущий, а вместо - записываем в новый лист со старым id
+            if (it.id == id) {
+                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, true, SystemClock.uptimeMillis()))
+
+            } else {
+                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, false, 0L)) // Возможно здесь занулять не надо
+            }
+        }
+
+        stopwatchAdapter.submitList(newTimers)
+        stopwatches.clear()
+        stopwatches.addAll(newTimers)
+    }
+
+    // Останавливаем и изменяем таймер, добавляем глобальное время для коррекции
+    override fun stop(id: Int, currentMs: Long) {
         val newTimers = mutableListOf<Stopwatch>()
 
         stopwatches.forEach {
             if (it.id == id) {
-                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, true))
+                                                    // Если null, то запускаем с последнего значенияч
+                newTimers.add(Stopwatch(it.id, currentMs ?: it.currentMs, it.taskMs, false, 0L))
             } else {
-                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, false))
-                // newTimers.add(it)
+                newTimers.add(it)
             }
         }
         stopwatchAdapter.submitList(newTimers)
         stopwatches.clear()
         stopwatches.addAll(newTimers)
-
-    }
-
-    override fun stop(id: Int, currentMs: Long) {
-        changeStopwatch(id, currentMs, false)
     }
 
     override fun reset(id: Int) {
-        // changeStopwatch(id, null, false)
-        
         val newTimers = mutableListOf<Stopwatch>()
 
         stopwatches.forEach {
             if (it.id == id) {
-                newTimers.add(Stopwatch(it.id, it.taskMs, it.taskMs, it.isStarted))
+                newTimers.add(Stopwatch(it.id, it.taskMs, it.taskMs, false, 0L))
             } else {
-                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, it.isStarted))
-                // newTimers.add(it)
+                newTimers.add(it)
             }
         }
         stopwatchAdapter.submitList(newTimers)
@@ -107,23 +109,6 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
     override fun delete(id: Int) {
         stopwatches.remove(stopwatches.find { it.id == id })
         stopwatchAdapter.submitList(stopwatches.toList())
-    }
-
-    private fun changeStopwatch(id: Int, currentMs: Long?, isStarted: Boolean) {
-        val newTimers = mutableListOf<Stopwatch>()
-        // Не изменяем текущий, а пропускаем, вместо - записываем новый со старым id
-        // Остальные переписываем
-        stopwatches.forEach {
-            if (it.id == id) {
-                // Если null, то запускаем с последнего значенияч
-                newTimers.add(Stopwatch(it.id, currentMs ?: it.currentMs, it.taskMs, isStarted))
-            } else {
-                newTimers.add(it)
-            }
-        }
-        stopwatchAdapter.submitList(newTimers)
-        stopwatches.clear()
-        stopwatches.addAll(newTimers)
     }
 
     // Методы будут вызываться когда соответствующие состояния жизненного цикла будут достигнуты
@@ -145,8 +130,26 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
         startService(stopIntent)
     }
 
-    private companion object {
+//    private fun getCountDownTimer(stopwatch: Stopwatch): CountDownTimer {
+//        return object : CountDownTimer(stopwatch.currentMs, UNIT_TEN_MS) {
+//            val interval = UNIT_TEN_MS
+//
+//            override fun onTick(millisUntilFinished: Long) {
+//                // Листаем лист, берем объект с инСтарт, чекаем его на глобальное время, минусуем сикунду
+//                // Сообщение о том что таймер закончился
+//                // stopwatch.currentMs += interval
+//                // binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+//            }
+//
+//            override fun onFinish() {
+//                // binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+//            }
+//        }
+//    }
 
-        private const val INTERVAL = 10L
-    }
+//    private companion object {
+//
+//        private const val UNIT_TEN_MS = 10L
+//        private const val PERIOD = 1000L * 60L * 60L * 24L // Day
+//    }
 }

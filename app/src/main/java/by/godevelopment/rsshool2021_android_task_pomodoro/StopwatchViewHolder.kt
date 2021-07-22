@@ -21,20 +21,24 @@ class StopwatchViewHolder(
     private val resources: Resources
 ): RecyclerView.ViewHolder(binding.root) {
 
-    // используем Android public abstract class CountDownTimer с простыми методами и калл-бэками
     private var timer: CountDownTimer? = null
 
     // Такой подход, когда ViewHolder обрабатывает только визуальное представление айтема, который пришел ему в методе bind, и ничего не меняет напрямую,
     // а все колбэки обрабатываются снаружи (в нашем случае через listener) - является предпочтительным.
     // в метод bind передаем экземпляр Stopwatch, он приходит к нам из метода onBindViewHolder адаптера и содержит актуальные параметры для данного элемента списка.
     fun bind(stopwatch: Stopwatch) {
-        // Текстовое поле для отображения 00:00:00:00 stopwatch_item
+
+        // Элементы нашей item
         binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+        binding.restartButton.text = "Restart"
         val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
         binding.customViewOne.setCurrent(circleProcent)
 
+        // Определяем действия холдера:
         // Если таймер работает,
         if (stopwatch.isStarted) {
+
+            // if () {}
             startTimer(stopwatch)   // то рисуем иконки стоп и включаем кастом вью
             Log.i("isStarted?", "startTimer(stopwatch)")
         } else {
@@ -51,11 +55,11 @@ class StopwatchViewHolder(
             // Если таймер работает,
             if (stopwatch.isStarted) {
                 listener.stop(stopwatch.id, stopwatch.currentMs) // То на нажатие останавливаем и сохраняем время
-                Log.i("isStarted?", "кнопку-оборотень listener.stop")
+                Log.i("isStarted?", "кнопка-оборотень listener.stop")
 
             } else {
                 listener.start(stopwatch.id)    // Иначе, на нажатие запускаем таймер
-                Log.i("isStarted?", "кнопку-оборотень listener.start")
+                Log.i("isStarted?", "кнопка-оборотень listener.start")
             }
         }
 
@@ -66,73 +70,47 @@ class StopwatchViewHolder(
 
     // Запускаем таймер, рисуем иконку стоп и включаем кастом вью
     private fun startTimer(stopwatch: Stopwatch) {
-        val drawable = resources.getDrawable(R.drawable.ic_baseline_pause_24)
-        binding.startPauseButton.setImageDrawable(drawable)
+        binding.startPauseButton.text = "Stop"
+        binding.blinkingIndicator.isInvisible = false
+        (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
 
         // в методе startTimer обязательно нужно кэнсельнуть таймер перед созданием нового
         // Это необзодимо по той причине, что RecyclerView переиспользует ViewHolder’ы и один таймер может наложится на другой.
         timer?.cancel()
-        // Здесь нужна поправка на время проведенное за горизонтом событий, если таймер был запущен
-        val defTime = SystemClock.uptimeMillis() - listener.globalTime
-        Log.i("Timer", "defTime = SystemClock.uptimeMillis() - listener.globalTime: $defTime = ${SystemClock.uptimeMillis()} - ${listener.globalTime}")
-        val x = stopwatch.currentMs - defTime
-        Log.i("Timer", "x = stopwatch.currentMs - defTime: ${x.displayTime()} = ${stopwatch.currentMs.displayTime()} - ${defTime.displayTime()}")
-        if (x < 0) stopTimer(stopwatch)
-        else stopwatch.currentMs = stopwatch.currentMs - x
         timer = getCountDownTimer(stopwatch)
         timer?.start()
-
-        binding.blinkingIndicator.isInvisible = false
-        (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
     }
 
-    // Выключаем таймер, рисуем иконку пуск и выключаем кастом вью
+    // Выключаем таймер и кастом вью, рисуем иконку пуск
     private fun stopTimer(stopwatch: Stopwatch) {
-        val drawable = resources.getDrawable(R.drawable.ic_baseline_play_arrow_24)
-        binding.startPauseButton.setImageDrawable(drawable)
 
-        timer?.cancel()
-        Log.i("Timer", "timer?.cancel() и listener.globalTime = 0")
-        // С каждым тиком записываем системное время в мэйн
-        listener.globalTime = 0
-
-
+        binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+        val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
+        binding.customViewOne.setCurrent(circleProcent)
         binding.blinkingIndicator.isInvisible = true
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
+
+        if (stopwatch.currentMs == stopwatch.taskMs) binding.startPauseButton.text = "Start"
+        else binding.startPauseButton.text = "Resume"
+
+        timer?.cancel()
     }
 
-    // public abstract class CountDownTimer - значит надо вернуть object этого класса, запихнуть в свойство и вызвать метод класса, через эту переменную
     private fun getCountDownTimer(stopwatch: Stopwatch): CountDownTimer {
-                                    // long millisInFuture, long countDownInterval
         return object : CountDownTimer(stopwatch.currentMs, UNIT_TEN_MS) {
             val interval = UNIT_TEN_MS
 
-            // Срабатывает калл-бэк на каждом такте таймера. UntilFinished - До завершения
             override fun onTick(millisUntilFinished: Long) {
-                // С тактом меняем числа на циферблате, интервалы просчитваем вручную
                 stopwatch.currentMs -= interval
-                binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
 
-                // Продублировать в bind view
+                binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+                // Коректируем изображение Кастом-Вью
                 val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
                 binding.customViewOne.setCurrent(circleProcent)
-
-                // С каждым тиком записываем системное время в мэйн
-                listener.globalTime = SystemClock.uptimeMillis()
-                Log.i("Timer", "С каждым тиком записываем системное время в мэйн ${listener.globalTime.displayTime()}")
-
             }
 
-            // Срабатывает калл-бэк, когда время на таймере закончится
             override fun onFinish() {
-                stopwatch.currentMs = 0
-                binding.customViewOne.setCurrent(1000)
-                binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
-                Log.i("Timer", "text = stopwatch.currentMs.displayTime() ${stopwatch.currentMs.displayTime()}")
                 stopTimer(stopwatch)
-                Log.i("Timer", "stopTimer(stopwatch)")
-                Toast.makeText(itemView.context, "Работа таймера завершена!", Toast.LENGTH_LONG).show()
-                listener.stop(stopwatch.id, stopwatch.taskMs)
             }
         }
     }
