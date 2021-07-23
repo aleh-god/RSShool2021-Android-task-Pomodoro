@@ -28,7 +28,14 @@ class StopwatchViewHolder(
     // а все колбэки обрабатываются снаружи (в нашем случае через listener) - является предпочтительным.
     // в метод bind передаем экземпляр Stopwatch, он приходит к нам из метода onBindViewHolder адаптера и содержит актуальные параметры для данного элемента списка.
     fun bind(stopwatch: Stopwatch) {
+        // Останавливаем таймер переиспользованного холдера
+        timer?.cancel()
+        Log.i("bind", "timer?.cancel()")
+        // Метка системного таймера
         val currentTime = SystemClock.uptimeMillis()
+        Log.i("bind", "SystemClock.uptimeMillis() = ${SystemClock.uptimeMillis().displayTime()}")
+        Log.i("bind", "stopwatch.globalMs = ${stopwatch.globalMs.displayTime()}")
+        Log.i("isStarted?", "stopwatch.currentMs = ${stopwatch.currentMs.displayTime()}")
 
         // Элементы нашей item
         binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
@@ -40,16 +47,27 @@ class StopwatchViewHolder(
         // Если таймер работает,
         if (stopwatch.isStarted) {
 
-            // if () {}
-                //         android:background="#E91E63">
+            val diffMs = currentTime - stopwatch.globalMs   // Временной промежуток работы таймера за видимостью
+            Log.i("isStarted?", "diffMs = ${diffMs.displayTime()}")
 
+            if (stopwatch.taskMs > diffMs) {
+                // Если время после корректировки осталось, то запускаем таймер
+                stopwatch.currentMs = stopwatch.taskMs - diffMs      // Скоректированное время
+                startTimer(stopwatch)   // и рисуем иконки стоп и включаем кастом вью
 
+                Log.i("startTimer", "stopTimer = ${(stopwatch.taskMs - diffMs).displayTime()}")
+                Log.i("startTimer", "new stopwatch.currentMs = ${stopwatch.currentMs.displayTime()}")
+                Log.i("startTimer", "stopwatch.taskMs - diffMs = ${(stopwatch.taskMs - diffMs).displayTime()}")
+            } else {
+                Log.i("stopTimer", "stopTimer = ${(stopwatch.taskMs - diffMs).displayTime()}")
 
-            startTimer(stopwatch)   // то рисуем иконки стоп и включаем кастом вью
-            Log.i("isStarted?", "startTimer(stopwatch)")
+                stopwatch.currentMs = 0L
+                stopTimer(stopwatch)
+            }
         } else {
+            Log.i("isStarted?", "stopTimer = ${stopwatch.isStarted} осталось = ${stopwatch.currentMs.displayTime()}")
+
             stopTimer(stopwatch)    // иначе, рисуем икноки старт и выключаем кастом вью
-            Log.i("isStarted?", "stopTimer(stopwatch)")
         }
 
         initButtonsListeners(stopwatch) // Настраиваем действия на кнопку-оборотень
@@ -82,7 +100,8 @@ class StopwatchViewHolder(
 
         // в методе startTimer обязательно нужно кэнсельнуть таймер перед созданием нового
         // Это необзодимо по той причине, что RecyclerView переиспользует ViewHolder’ы и один таймер может наложится на другой.
-        timer?.cancel()
+        // перенес в bind timer?.cancel()
+        Log.i("bind", "timer?.start()")
         timer = getCountDownTimer(stopwatch)
         timer?.start()
     }
@@ -109,7 +128,7 @@ class StopwatchViewHolder(
             binding.item.setBackgroundColor(resources.getColor(R.color.white, null))
         }
 
-        timer?.cancel()
+        // перенес в bind timer?.cancel()
     }
 
     private fun getCountDownTimer(stopwatch: Stopwatch): CountDownTimer {
@@ -117,6 +136,7 @@ class StopwatchViewHolder(
 
             override fun onTick(millisUntilFinished: Long) {
                 stopwatch.currentMs = millisUntilFinished
+                Log.i("onTick", "осталось = ${stopwatch.currentMs.displayTime()}")
 
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
                 // Коректируем изображение Кастом-Вью
@@ -125,6 +145,7 @@ class StopwatchViewHolder(
             }
 
             override fun onFinish() {
+                Log.i("onFinish", "осталось = ${stopwatch.currentMs.displayTime()}")
                 stopwatch.currentMs = 0L
                 listener.stop(stopwatch.id, stopwatch.currentMs)
                 stopTimer(stopwatch)
