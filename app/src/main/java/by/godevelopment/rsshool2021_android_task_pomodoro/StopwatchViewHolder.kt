@@ -30,44 +30,51 @@ class StopwatchViewHolder(
     fun bind(stopwatch: Stopwatch) {
         // Останавливаем таймер переиспользованного холдера
         timer?.cancel()
-        Log.i("bind", "timer?.cancel()")
+        Log.i("bind", "Начало бинда")
         // Метка системного таймера
         val currentTime = SystemClock.uptimeMillis()
         Log.i("bind", "SystemClock.uptimeMillis() = ${SystemClock.uptimeMillis().displayTime()}")
         Log.i("bind", "stopwatch.globalMs = ${stopwatch.globalMs.displayTime()}")
-        Log.i("isStarted?", "stopwatch.currentMs = ${stopwatch.currentMs.displayTime()}")
+        Log.i("bind", "stopwatch.currentMs = ${stopwatch.currentMs.displayTime()}")
 
         // Элементы нашей item
         binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
         binding.restartButton.text = "Restart"
-        val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
-        binding.customViewOne.setCurrent(circleProcent)
+        val circlePercent = 60000 - (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
+        binding.customViewOne.setCurrent(circlePercent)
 
         // Определяем действия холдера:
         // Если таймер работает,
         if (stopwatch.isStarted) {
 
             val diffMs = currentTime - stopwatch.globalMs   // Временной промежуток работы таймера за видимостью
-            Log.i("isStarted?", "diffMs = ${diffMs.displayTime()}")
+            Log.i("Расчет времени", "Если => таймер включен, diffMs = ${diffMs.displayTime()}")
 
             if (stopwatch.taskMs > diffMs) {
+
+                Log.i("Расчет времени", "Коррекция меньше, stopwatch.taskMs - diffMs = ${(stopwatch.taskMs - diffMs).displayTime()}")
+
                 // Если время после корректировки осталось, то запускаем таймер
-                stopwatch.currentMs = stopwatch.taskMs - diffMs      // Скоректированное время
+                // stopwatch.currentMs = stopwatch.taskMs - diffMs      // Скоректированное время
+
+                if (diffMs > 900L) stopwatch.currentMs = stopwatch.taskMs - diffMs      // Скоректированное время
+
+                Log.i("Расчет времени", "Коррекция меньше, new stopwatch.currentMs = ${stopwatch.currentMs.displayTime()}")
+                Log.i("Расчет времени", "Коррекция меньше, stopwatch.taskMs - diffMs = ${(stopwatch.taskMs - diffMs).displayTime()}")
+                Log.i("Расчет времени", "Коррекция меньше, startTimer(stopwatch)")
+
                 startTimer(stopwatch)   // и рисуем иконки стоп и включаем кастом вью
-
-                Log.i("startTimer", "stopTimer = ${(stopwatch.taskMs - diffMs).displayTime()}")
-                Log.i("startTimer", "new stopwatch.currentMs = ${stopwatch.currentMs.displayTime()}")
-                Log.i("startTimer", "stopwatch.taskMs - diffMs = ${(stopwatch.taskMs - diffMs).displayTime()}")
             } else {
-                Log.i("stopTimer", "stopTimer = ${(stopwatch.taskMs - diffMs).displayTime()}")
-
                 stopwatch.currentMs = 0L
                 stopTimer(stopwatch)
+
+                Log.i("Расчет времени", "Коррекция больше, stopTimer = ${(stopwatch.taskMs - diffMs).displayTime()}")
+                Log.i("Расчет времени", "Коррекция больше, stopTimer(stopwatch) currentMs = 0L")
             }
         } else {
-            Log.i("isStarted?", "stopTimer = ${stopwatch.isStarted} осталось = ${stopwatch.currentMs.displayTime()}")
-
             stopTimer(stopwatch)    // иначе, рисуем икноки старт и выключаем кастом вью
+
+            Log.i("Расчет времени", "Таймер выкючен, то stopTimer(). осталось = ${stopwatch.currentMs.displayTime()}")
         }
 
         initButtonsListeners(stopwatch) // Настраиваем действия на кнопку-оборотень
@@ -101,7 +108,7 @@ class StopwatchViewHolder(
         // в методе startTimer обязательно нужно кэнсельнуть таймер перед созданием нового
         // Это необзодимо по той причине, что RecyclerView переиспользует ViewHolder’ы и один таймер может наложится на другой.
         // перенес в bind timer?.cancel()
-        Log.i("bind", "timer?.start()")
+        Log.i("fun startTimer", "timer?.start()")
         timer = getCountDownTimer(stopwatch)
         timer?.start()
     }
@@ -110,8 +117,8 @@ class StopwatchViewHolder(
     private fun stopTimer(stopwatch: Stopwatch) {
 
         binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
-        val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
-        binding.customViewOne.setCurrent(circleProcent)
+        val circlePercent = 60000 - (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
+        binding.customViewOne.setCurrent(circlePercent)
         binding.blinkingIndicator.isInvisible = true
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
 
@@ -140,8 +147,8 @@ class StopwatchViewHolder(
 
                 binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
                 // Коректируем изображение Кастом-Вью
-                val circleProcent = (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
-                binding.customViewOne.setCurrent(circleProcent)
+                val circlePercent = 60000 - (stopwatch.currentMs / (stopwatch.taskMs / 100)) * 600
+                binding.customViewOne.setCurrent(circlePercent)
             }
 
             override fun onFinish() {

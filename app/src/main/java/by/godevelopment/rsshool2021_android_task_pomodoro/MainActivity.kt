@@ -74,6 +74,25 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
         stopwatches.addAll(newTimers)
     }
 
+//    override fun resume(id: Int) {
+//        val newTimers = mutableListOf<Stopwatch>()
+//
+//        stopwatches.forEach {
+//            // Не изменяем текущий, а вместо - записываем в новый лист со старым id
+//            if (it.id == id) {
+//                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, true, SystemClock.uptimeMillis()))
+//
+//            } else {
+//                // Возможно здесь занулять не надо или проводить коррекцию
+//                newTimers.add(Stopwatch(it.id, it.currentMs, it.taskMs, false, 0L))
+//            }
+//        }
+//
+//        stopwatchAdapter.submitList(newTimers)
+//        stopwatches.clear()
+//        stopwatches.addAll(newTimers)
+//    }
+
     // Останавливаем и изменяем таймер, добавляем глобальное время для коррекции
     override fun stop(id: Int, currentMs: Long) {
         val newTimers = mutableListOf<Stopwatch>()
